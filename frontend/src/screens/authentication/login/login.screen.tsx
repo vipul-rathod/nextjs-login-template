@@ -1,16 +1,31 @@
+'use client'
 import { Login_BG, Logo } from "@/assets/export.assets";
 import { Box, Button, Card, Checkbox, CommonTypography, FormControlLabel, Grid, Stack, TextField } from "@/common-components/export.common-components";
 import { InputAdornment, IconButton } from "@mui/material";
-import { Roboto } from "next/font/google";
+import { Playfair } from "next/font/google";
 import useLoginStyle from "./login.style";
 import { Image } from "@/common-components/export.common-components";
+import useLogin from "./login.hook";
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
-const roboto = Roboto({
+const playfairFont = Playfair({
   weight: '300'
 })
 
 export default function LoginScreen() {
-  const {loginStyles: {main_box, body_card, login_bg_image_box, login_details_box}} = useLoginStyle();
+  const {
+    showPassword,
+    watch,
+    register,
+    errors,
+    handleLoginFieldUpdate,
+    handleTogglePasswordVisibility,
+    onSignInClick
+  } = useLogin();
+  const { emailId, password } = watch();
+  // const { emailId, password } = getValues();
+  const { loginStyles: { main_box, body_card, login_bg_image_box, login_details_box } } = useLoginStyle();
+
   return (
     // main box
     <Box
@@ -51,12 +66,12 @@ export default function LoginScreen() {
             position='relative'
             sx={{ flexFlow: 'column wrap' }}
           >
-            <Grid 
-              width='100%' 
-              flexDirection='row' 
+            <Grid
+              width='100%'
+              flexDirection='row'
               margin='0px'
             >
-              <Stack 
+              <Stack
                 display='flex'
                 flexDirection='column'
                 justifyContent='center'
@@ -66,7 +81,7 @@ export default function LoginScreen() {
                 <Image
                   src={Logo}
                   alt='Concord Seal'
-                  style={{width:'300px', height:'200px'}}
+                  style={{ width: '300px', height: '200px' }}
                   fetchPriority='high'
                   loading='eager'
                   width={293}
@@ -78,13 +93,13 @@ export default function LoginScreen() {
                   fontSize: {xs:'25px', sm:'40px', md: '28px', lg:'40px'},
                   fontWeight: '700'
                 }}
-                fontFamily={roboto.style.fontFamily}
+                fontFamily={playfairFont.style.fontFamily}
                 /> */}
               </Stack>
             </Grid>
-            <Grid 
-              width='100%' 
-              flexDirection='row' 
+            <Grid
+              width='100%'
+              flexDirection='row'
               margin='0px'
             >
               {/* <CommonTypography 
@@ -95,15 +110,15 @@ export default function LoginScreen() {
                   textAlign: 'center',
                   color: '#339BFF'
                 }}
-                fontFamily={roboto.style.fontFamily}
+                fontFamily={playfairFont.style.fontFamily}
                 /> */}
             </Grid>
-            <Grid 
+            <Grid
               width='100%'
-              display='flex' 
+              display='flex'
               flexDirection='row'
               justifyContent='center'
-              alignItems='center' 
+              alignItems='center'
               margin='0px'
             >
               <Stack
@@ -112,14 +127,16 @@ export default function LoginScreen() {
                 padding='16px'
                 rowGap='8px'
                 sx={{
-                  width: {xs:'280px', sm:'400px', md:'280px', lg:'400px'},
-                  paddingTop: {xs:'32px'},
-                  boxShadow: {xs:'rgba(0,0,0,0.6) 4px 2px 6px'},
-                  borderRadius: {xs:'15px'}
+                  width: { xs: '280px', sm: '400px', md: '280px', lg: '400px' },
+                  paddingTop: { xs: '32px' },
+                  boxShadow: { xs: 'rgba(0,0,0,0.6) 4px 2px 6px' },
+                  borderRadius: { xs: '15px' }
                 }}
               >
                 {/* Email TextField */}
-                <TextField 
+                <TextField
+                  {...register('emailId', { required: 'Email ID is required', pattern: { value: /^\S+@\S+\.\S+$/, message: 'Email ID needs @ and .' } })}
+                  error={errors.emailId?.message ? true : false}
                   fullWidth
                   size='small'
                   required
@@ -127,104 +144,63 @@ export default function LoginScreen() {
                   name="emailId"
                   type="email"
                   sx={{
-                    '& .MuiInputLabel-root': {transformOrigin: 'left top'},
-                    '& .MuiFormLabel-asterisk': {color: 'red'}
+                    '& .MuiInputLabel-root': { transformOrigin: 'left top' },
+                    '& .MuiFormLabel-asterisk': { color: 'red' }
                   }}
-                  // value={loginData.emailId}
-                  // onChange={handleLoginDataChange}
+                  value={emailId}
+                  onChange={(e) => handleLoginFieldUpdate('emailId', e.target.value)}
+                  helperText={errors.emailId?.message}
                 />
                 {/* Password Textfield */}
-                <TextField 
+                <TextField
+                  {...register('password', { required: 'Password is required' })}
+                  error={errors.password?.message ? true : false}
                   fullWidth
                   size='small'
                   required
                   label='Password'
                   name="password"
                   sx={{
-                    '& .MuiInputLabel-root': {transformOrigin: 'left top'},
-                    '& .MuiFormLabel-asterisk': {color: 'red'}
+                    '& .MuiInputLabel-root': { transformOrigin: 'left top' },
+                    '& .MuiFormLabel-asterisk': { color: 'red' },
                   }}
-                  // value={loginData.password}
-                  // onChange={handleLoginDataChange}
-                  // type={showPassword ? 'string' : 'password'}
-                  // slotProps={{
-                  //   input: {
-                  //     endAdornment:
-                  //       <InputAdornment position='end' >
-                  //         <IconButton
-                  //           aria-label='toggle password visibility'
-                  //           onClick={handleTogglePassword}
-                  //         >
-                  //           {showPassword ? <Visibility /> : <VisibilityOff />}
-                  //         </IconButton>
-                  //       </InputAdornment >
-                  //   }
-                  // }}
+                  value={password}
+                  onChange={(e) => handleLoginFieldUpdate('password', e.target.value)}
+                  helperText={errors.password?.message}
+                type={showPassword ? 'string' : 'password'}
+                slotProps={{
+                  input: {
+                    endAdornment:
+                      <InputAdornment position='end' >
+                        <IconButton
+                          aria-label='toggle password visibility'
+                          onClick={handleTogglePasswordVisibility}
+                        >
+                          {showPassword ? <Visibility /> : <VisibilityOff />}
+                        </IconButton>
+                      </InputAdornment >
+                  }
+                }}
                 />
                 {/* Remember Checkbox */}
                 {/* <Stack display='flex' flexDirection='column' rowGap='8px'>
                   <FormControlLabel control={<Checkbox name='rememberMe' checked={loginData.rememberMe} onChange={handleLoginDataChange}/>} label="Remember me" />
                 </Stack> */}
-                <Button type='submit' size='large' variant='contained' >Sign In</Button>
-                <Stack
-                  display='flex' 
-                  flexDirection={{xs:'column', sm:'row'}}
-                  justifyContent='space-between'
-                  alignItems={{xs:'flex-start'}}
-                >
-                  <Button
-                    className={roboto.className}
-                    sx={{
-                      display: 'inline-flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      textTransform: 'none',
-                      fontSize: '10px',
-                      textDecoration: 'underline'
-                    }}
-                    // onClick={() => onForgotPasswordClick(loginData.emailId)}
-                  >Forgot password?</Button>
-                  <Button
-                    className={roboto.className}
-                    sx={{
-                      display: 'inline-flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      textTransform: 'none',
-                      fontSize: '10px',
-                      textDecoration: 'underline'
-                    }}
-                  >Don't have an account? Sign Up</Button>
-                </Stack>
-              </Stack>
-            </Grid>
-            {/* Footer */}
-            <Grid
-              width='100%' 
-              flexDirection='row' 
-              margin='0px'
-              position='absolute'
-              bottom='0px'
-            >
+                <Button 
+                  sx={{textTransform:'none', fontFamily: playfairFont.style.fontFamily, fontSize: '18px', fontWeight: '500'}}
+                  // className={playfairFont.className} 
+                  size='large' 
+                  variant='contained' 
+                  onClick={onSignInClick} 
+                >Sign In</Button>
                 <Stack
                   display='flex'
-                  flexDirection='row'
-                  justifyContent='center'
-                  alignItems='center'
+                  flexDirection={{ xs: 'column', sm: 'row' }}
+                  justifyContent='space-between'
+                  alignItems={{ xs: 'flex-start' }}
                 >
-                  <CommonTypography 
-                    text='A1 SPECT-O-CRAFT LLP, Inc.'
-                    sx={{
-                      margin: '0px',
-                      lineHeight: 1.5,
-                      letterSpacing: '0.00938em',
-                      color: 'black',
-                      fontSize: '12px'
-                    }}
-                    fontFamily={roboto.style.fontFamily}
-                    />
                   <Button
-                    className={roboto.className}
+                    className={playfairFont.className}
                     sx={{
                       display: 'inline-flex',
                       justifyContent: 'center',
@@ -233,8 +209,59 @@ export default function LoginScreen() {
                       fontSize: '12px',
                       textDecoration: 'underline'
                     }}
-                  >Privacy Policy</Button>
+                  // onClick={() => onForgotPasswordClick(loginData.emailId)}
+                  >Forgot password?</Button>
+                  <Button
+                    className={playfairFont.className}
+                    sx={{
+                      display: 'inline-flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      textTransform: 'none',
+                      fontSize: '12px',
+                      textDecoration: 'underline'
+                    }}
+                  >Don't have an account? Sign Up</Button>
                 </Stack>
+              </Stack>
+            </Grid>
+            {/* Footer */}
+            <Grid
+              width='100%'
+              flexDirection='row'
+              margin='0px'
+              position='absolute'
+              bottom='0px'
+            >
+              <Stack
+                display='flex'
+                flexDirection='row'
+                justifyContent='center'
+                alignItems='center'
+              >
+                <CommonTypography
+                  text='A1 SPECT-O-CRAFT LLP, Inc.'
+                  sx={{
+                    margin: '0px',
+                    lineHeight: 1.5,
+                    letterSpacing: '0.00938em',
+                    color: 'black',
+                    fontSize: '12px'
+                  }}
+                  fontFamily={playfairFont.style.fontFamily}
+                />
+                <Button
+                  className={playfairFont.className}
+                  sx={{
+                    display: 'inline-flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    textTransform: 'none',
+                    fontSize: '12px',
+                    textDecoration: 'underline'
+                  }}
+                >Privacy Policy</Button>
+              </Stack>
             </Grid>
 
           </Grid>
